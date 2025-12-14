@@ -16,8 +16,20 @@ export async function POST(req: Request) {
     orderBy: { createdAt: "asc" }
   });
 
-  const latency = rows.map(r => r.latencyMs).filter((v): v is number => typeof v === "number");
-  const loss = rows.map(r => r.lossPct).filter((v): v is number => typeof v === "number");
+  const rows: Array<{ latencyMs: number | null; lossPct: number | null }> =
+  await prisma.measurement.findMany({
+    where: { siteId: site.id, createdAt: { gte: since } },
+    select: { latencyMs: true, lossPct: true },
+    orderBy: { createdAt: "asc" }
+  });
+
+const latency = rows
+  .map((r) => r.latencyMs)
+  .filter((v): v is number => typeof v === "number");
+
+const loss = rows
+  .map((r) => r.lossPct)
+  .filter((v): v is number => typeof v === "number");
 
   const avg = (arr: number[]) => (arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : NaN);
   const max = (arr: number[]) => (arr.length ? Math.max(...arr) : NaN);
